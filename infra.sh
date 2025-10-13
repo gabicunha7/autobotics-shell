@@ -5,7 +5,7 @@ NOME_GRUPO=meugrupodeseguranca
 NOME_EC2=web-server-01
 ID_VPCS=$(aws ec2 describe-vpcs --query 'Vpcs[*].[VpcId]' --output text)
 ID_SUBNET=$(aws ec2 describe-subnets --query 'Subnets[1].SubnetId' --output text)
-NOME_BUCKET=1d4a3f130793f4b0dfc576791dd86b04
+NOME_BUCKET=1d4a3f130793f4b0dfc576791dd86b34
 
 echo "criando chave"
 aws ec2 create-key-pair --key-name ${NOME_CHAVE} --region us-east-1 --query 'KeyMaterial' --output text > ${NOME_CHAVE}.pem

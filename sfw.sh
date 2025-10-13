@@ -10,12 +10,14 @@ sudo apt install nodejs -y
 sudo apt install python3 -y
 sudo apt install default-jdk -y
 sudo apt install unzip -y
-apt install python3.12-venv -y
+sudo apt install python3.12-venv -y
+sudo apt install npm -y
 
 sudo useradd ${USUARIO} -m
 echo "${USUARIO}:${SENHA}" | sudo chpasswd ${USUARIO} 
 sudo usermod -aG sudo ${USUARIO}
 sudo usermod -aG docker ${USUARIO}
+sudo usermod -s /bin/bash ${USUARIO}
 
 sudo mkdir /home/${USUARIO}/.ssh
 sudo cp /home/ubuntu/.ssh/authorized_keys /home/${USUARIO}/.ssh
@@ -42,5 +44,16 @@ curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip
 unzip awscliv2.zip
 sudo ./aws/install
 
-git clone https://github.com/gabicunha7/autobotics-agent.git /home/${USUARIO}
-git clone https://github.com/gabicunha7/autobotics.git /home/${USUARIO}
+sudo git clone https://github.com/gabicunha7/autobotics-agent.git /home/${USUARIO}/autobotics-agent
+sudo git clone https://github.com/gabicunha7/autobotics.git /home/${USUARIO}/autobotics
+
+sudo chown -R ${USUARIO}:${USUARIO} /home/${USUARIO}/autobotics-agent
+sudo chown -R ${USUARIO}:${USUARIO} /home/${USUARIO}/autobotics
+
+npm install --prefix /home/${USUARIO}/autobotics/site
+
+sleep 10
+sudo docker exec -i mysql mysql -u root -p${SENHA_BD_ROOT} < /home/${USUARIO}/autobotics/BD/Script-autobotics.sql
+
+sudo python3 -m venv /home/${USUARIO}/autobotics-agent/venv
+/home/${USUARIO}/autobotics-agent/venv/bin/pip install -r /home/${USUARIO}/autobotics-agent/requirements.txt
