@@ -3,6 +3,7 @@
 NOME_CHAVE=meupardechaves
 NOME_GRUPO=meugrupodeseguranca
 NOME_EC2=web-server-01
+NOME_EC2_2=java-server-01
 ID_VPCS=$(aws ec2 describe-vpcs --query 'Vpcs[*].[VpcId]' --output text)
 ID_SUBNET=$(aws ec2 describe-subnets --query 'Subnets[1].SubnetId' --output text)
 NOME_BUCKET=1d4a3f130793f4b0dfc576791dd86b34
@@ -33,24 +34,47 @@ echo "permitindo acesso ao mysql na porta 3306"
 aws ec2 authorize-security-group-ingress --group-id ${ID_GRUPO} --protocol tcp --port 3306 --cidr 0.0.0.0/0
 echo "acesso permitido"
 
-echo "tentando rodar instancia"
-aws ec2 run-instances --image-id ami-0360c520857e3138f --region us-east-1 --user-data file://sfw.sh --count 1 --security-group-ids ${ID_GRUPO} --instance-type t3.small --subnet-id ${ID_SUBNET} --key-name ${NOME_CHAVE} --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":8, "VolumeType":"gp3","DeleteOnTermination":true}}]' --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=${NOME_EC2}}]" --query 'Instances[0].InstanceId' --output table
-echo "ec2 está rodando"
+echo "tentando rodar instancia1"
+aws ec2 run-instances --image-id ami-0360c520857e3138f --region us-east-1 --user-data file://sfw.sh --count 1 --security-group-ids ${ID_GRUPO} --instance-type t3.medium --subnet-id ${ID_SUBNET} --key-name ${NOME_CHAVE} --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":8, "VolumeType":"gp3","DeleteOnTermination":true}}]' --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=${NOME_EC2}}]" --query 'Instances[0].InstanceId' --output table
+echo "ec2 está rodando1"
 
-echo "pegando id instancia para usar no ip elastico"
+echo "tentando rodar instancia2"
+aws ec2 run-instances --image-id ami-0360c520857e3138f --region us-east-1 --user-data file://sfw_simples.sh --count 1 --security-group-ids ${ID_GRUPO} --instance-type t3.small --subnet-id ${ID_SUBNET} --key-name ${NOME_CHAVE} --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":8, "VolumeType":"gp3","DeleteOnTermination":true}}]' --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=${NOME_EC2_2}}]" --query 'Instances[0].InstanceId' --output table
+echo "ec2 está rodando2"
+
+echo "pegando id instancia 1 para usar no ip elastico"
 ID_INSTANCIA=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=${NOME_EC2}" --query 'Reservations[*].Instances[*].InstanceId' --output text)
-echo "peguei o id"
+echo "peguei o id 1"
 
-echo "criando ip elastico"
+echo "pegando id instancia 2 para usar no ip elastico"
+ID_INSTANCIA_2=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=${NOME_EC2_2}" --query 'Reservations[*].Instances[*].InstanceId' --output text)
+echo "peguei o id 2"
+
+echo "criando ip elastico 1"
 ID_IP=$(aws ec2 allocate-address --domain vpc --query 'AllocationId' --region us-east-1 --output text)
-echo "ip criado"
+echo "ip criado 1"
+
+echo "criando ip elastico 2"
+ID_IP_2=$(aws ec2 allocate-address --domain vpc --query 'AllocationId' --region us-east-1 --output text)
+echo "ip criado 2"
 
 while true; do
 	ESTADO_INSTANCIA=$(aws ec2 describe-instances --instance-ids ${ID_INSTANCIA} --query 'Reservations[*].Instances[*].State.Name' --output text --region us-east-1)
 	if [ "$ESTADO_INSTANCIA" == "running" ]; then
-		echo "Instancia Rodando"
+		echo "Instancia 1 Rodando"
 		echo "associando os dois"
 		aws ec2 associate-address --instance-id ${ID_INSTANCIA} --allocation-id ${ID_IP} --region us-east-1
+		break
+	fi
+	sleep 5
+done
+
+while true; do
+	ESTADO_INSTANCIA_2=$(aws ec2 describe-instances --instance-ids ${ID_INSTANCIA_2} --query 'Reservations[*].Instances[*].State.Name' --output text --region us-east-1)
+	if [ "$ESTADO_INSTANCIA_2" == "running" ]; then
+		echo "Instancia 2 Rodando"
+		echo "associando os dois"
+		aws ec2 associate-address --instance-id ${ID_INSTANCIA_2} --allocation-id ${ID_IP_2} --region us-east-1
 		break
 	fi
 	sleep 5
