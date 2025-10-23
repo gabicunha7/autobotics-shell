@@ -50,6 +50,18 @@ echo "pegando id instancia 2 para usar no ip elastico"
 ID_INSTANCIA_2=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=${NOME_EC2_2}" --query 'Reservations[*].Instances[*].InstanceId' --output text)
 echo "peguei o id 2"
 
+echo "associando primeira instancia com labprofile"
+aws ec2 associate-iam-instance-profile \
+    --instance-id "$ID_INSTANCIA" \
+    --iam-instance-profile Name="LabInstanceProfile"
+echo "associada 1"
+
+echo "associando segunda instancia com labprofile"
+aws ec2 associate-iam-instance-profile \
+    --instance-id "$ID_INSTANCIA_2" \
+    --iam-instance-profile Name="LabInstanceProfile"
+echo "associada 2"
+
 echo "criando ip elastico 1"
 ID_IP=$(aws ec2 allocate-address --domain vpc --query 'AllocationId' --region us-east-1 --output text)
 echo "ip criado 1"
