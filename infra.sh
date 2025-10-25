@@ -6,7 +6,7 @@ NOME_EC2=web-server-01
 NOME_EC2_2=java-server-01
 ID_VPCS=$(aws ec2 describe-vpcs --query 'Vpcs[*].[VpcId]' --output text)
 ID_SUBNET=$(aws ec2 describe-subnets --query 'Subnets[1].SubnetId' --output text)
-NOME_BUCKET=1d4a3f130793f4b0dfc576791dd86b34
+NOME_BUCKET=1d4a3f130793f4b0dfc576791dd86b32
 
 echo "criando chave"
 aws ec2 create-key-pair --key-name ${NOME_CHAVE} --region us-east-1 --query 'KeyMaterial' --output text > ${NOME_CHAVE}.pem
@@ -118,4 +118,7 @@ aws s3api put-bucket-policy --bucket raw-${NOME_BUCKET} --policy file://politica
 aws s3api put-bucket-policy --bucket trusted-${NOME_BUCKET} --policy file://politica_trusted.json
 echo "politica adicionada"
 
-
+echo "cria main csv"
+touch main.csv
+aws s3 cp main.csv s3://trusted-${NOME_BUCKET}
+echo "coloca no bucket"

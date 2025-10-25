@@ -10,7 +10,7 @@
                 "s3:PutObject",
                 "s3:DeleteObject"
             ],
-            "Resource": "arn:aws:s3:::raw-1d4a3f130793f4b0dfc576791dd86b34/*"
+            "Resource": "arn:aws:s3:::raw-1d4a3f130793f4b0dfc576791dd86b32/*"
         }
     ]
 }
