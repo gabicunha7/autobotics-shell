@@ -97,3 +97,25 @@ aws s3api create-bucket --bucket raw-${NOME_BUCKET}
 aws s3api create-bucket --bucket trusted-${NOME_BUCKET}
 aws s3api create-bucket --bucket client-${NOME_BUCKET}
 echo "Buckets criados"
+
+echo "permitindo acesso externo aos buckets"
+aws s3api put-public-access-block \
+    --bucket raw-${NOME_BUCKET} \
+    --public-access-block-configuration "BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false"
+
+aws s3api put-public-access-block \
+    --bucket trusted-${NOME_BUCKET} \
+    --public-access-block-configuration "BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false"
+
+aws s3api put-public-access-block \
+    --bucket client-${NOME_BUCKET} \
+    --public-access-block-configuration "BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false"
+echo "acesso permitido"
+
+echo "adicionando politica de acesso aos buckets"
+aws s3api put-bucket-policy --bucket raw-${NOME_BUCKET} --policy file://politica_raw.json
+
+aws s3api put-bucket-policy --bucket trusted-${NOME_BUCKET} --policy file://politica_trusted.json
+echo "politica adicionada"
+
+
