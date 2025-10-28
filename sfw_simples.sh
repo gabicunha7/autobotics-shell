@@ -5,7 +5,7 @@ SENHA=123pizza
 
 sudo apt update -y
 
-sudo apt install default-jdk -y
+sudo apt install openjdk-24-jdk -y
 sudo apt install unzip -y
 
 sudo useradd ${USUARIO} -m
