@@ -34,6 +34,10 @@ echo "permitindo acesso ao mysql na porta 3306"
 aws ec2 authorize-security-group-ingress --group-id ${ID_GRUPO} --protocol tcp --port 3306 --cidr 0.0.0.0/0
 echo "acesso permitido"
 
+echo "permitindo acesso na porta 8080"
+aws ec2 authorize-security-group-ingress --group-id ${ID_GRUPO} --protocol tcp --port 8080 --cidr 0.0.0.0/0
+echo "acesso permitido"
+
 echo "tentando rodar instancia1"
 aws ec2 run-instances --image-id ami-0360c520857e3138f --region us-east-1 --user-data file://sfw.sh --count 1 --security-group-ids ${ID_GRUPO} --instance-type t3.medium --subnet-id ${ID_SUBNET} --key-name ${NOME_CHAVE} --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":8, "VolumeType":"gp3","DeleteOnTermination":true}}]' --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=${NOME_EC2}}]" --query 'Instances[0].InstanceId' --output table
 echo "ec2 está rodando1"
