@@ -120,6 +120,9 @@ echo "adicionando politica de acesso aos buckets"
 aws s3api put-bucket-policy --bucket raw-${NOME_BUCKET} --policy file://politica_raw.json
 
 aws s3api put-bucket-policy --bucket trusted-${NOME_BUCKET} --policy file://politica_trusted.json
+
+aws s3api put-bucket-policy --bucket client-${NOME_BUCKET} --policy file://politica_client.json
+
 echo "politica adicionada"
 
 echo "cria main csv"
