@@ -35,25 +35,16 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.
 sudo apt update -y
 sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-sudo docker run --name mysql \
-  -e MYSQL_ROOT_PASSWORD=${SENHA_BD_ROOT} \
-  -p 3306:3306 \
-  -d mysql:latest
-
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 unzip awscliv2.zip
 sudo ./aws/install
 
-sudo git clone https://github.com/gabicunha7/autobotics-agent.git /home/${USUARIO}/autobotics-agent
 sudo git clone https://github.com/gabicunha7/autobotics.git /home/${USUARIO}/autobotics
 
-sudo chown -R ${USUARIO}:${USUARIO} /home/${USUARIO}/autobotics-agent
 sudo chown -R ${USUARIO}:${USUARIO} /home/${USUARIO}/autobotics
 
 npm install --prefix /home/${USUARIO}/autobotics/site
 
 sleep 10
-sudo docker exec -i mysql mysql -u root -p${SENHA_BD_ROOT} < /home/${USUARIO}/autobotics/BD/Script-autobotics.sql
 
-sudo python3 -m venv /home/${USUARIO}/autobotics-agent/venv
-/home/${USUARIO}/autobotics-agent/venv/bin/pip install -r /home/${USUARIO}/autobotics-agent/requirements.txt
+sudo docker compose -f /home/${USUARIO}/autobotics/docker-compose.yml up -d
