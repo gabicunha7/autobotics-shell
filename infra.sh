@@ -45,13 +45,6 @@ echo "pegando id instancia 1 para usar no ip elastico"
 ID_INSTANCIA=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=${NOME_EC2}" --query 'Reservations[*].Instances[*].InstanceId' --output text)
 echo "peguei o id 1"
 
-echo "associando primeira instancia com labprofile"
-aws ec2 associate-iam-instance-profile \
-    --instance-id "$ID_INSTANCIA" \
-    --iam-instance-profile Name="LabInstanceProfile"
-echo "associada 1"
-
-
 echo "criando ip elastico 1"
 ID_IP=$(aws ec2 allocate-address --domain vpc --query 'AllocationId' --region us-east-1 --output text)
 echo "ip criado 1"
@@ -67,6 +60,12 @@ while true; do
 	fi
 	sleep 5
 done
+
+echo "associando primeira instancia com labprofile"
+aws ec2 associate-iam-instance-profile \
+    --instance-id "$ID_INSTANCIA" \
+    --iam-instance-profile Name="LabInstanceProfile"
+echo "associada 1"
 
 ENV_VALOR=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=${NOME_EC2}" --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
 
@@ -118,11 +117,35 @@ aws lambda create-function-url-config --function-name "$NOME_FUNCAO" --auth-type
 CONTA=$(aws sts get-caller-identity --query "Account" --output text)
 aws lambda add-permission --function-name "$NOME_FUNCAO" --statement-id S3InvokePermission --action "lambda:InvokeFunction" --principal s3.amazonaws.com --source-arn arn:aws:s3:::raw-$NOME_BUCKET --source-account $CONTA
 
+echo "configurando trigger"
 aws s3api put-bucket-notification-configuration --bucket raw-$NOME_BUCKET --notification-configuration "{
   \"LambdaFunctionConfigurations\": [
     {
       \"LambdaFunctionArn\": \"arn:aws:lambda:us-east-1:$CONTA:function:$NOME_FUNCAO\",
-      \"Events\": [\"s3:ObjectCreated:Put\"]
+      \"Events\": [\"s3:ObjectCreated:*\"]
+    }
+  ]
+}"
+
+echo "criando lambda client"
+NOME_FUNCAO_CLIENT="lambda-autobotics-client"
+TIMEOUT_CLIENT=360                                       
+JAR_PATH_CLIENT="../autobotics-java-client/etl_autobotics-client/target/etl_autobotics-1.0-SNAPSHOT.jar"     
+
+aws lambda create-function --function-name "$NOME_FUNCAO_CLIENT" --runtime "$RUNTIME" --role "$ROLE_ARN" --handler "$HANDLER" --timeout "$TIMEOUT_CLIENT" --memory-size 512 --environment "Variables={$ENV_CHAVE=$ENV_VALOR}" --zip-file "fileb://$JAR_PATH_CLIENT" --output table
+	
+echo "criando url para lambda client"
+aws lambda create-function-url-config --function-name "$NOME_FUNCAO_CLIENT" --auth-type NONE --output table
+
+CONTA=$(aws sts get-caller-identity --query "Account" --output text)
+aws lambda add-permission --function-name "$NOME_FUNCAO_CLIENT" --statement-id S3InvokePermission --action "lambda:InvokeFunction" --principal s3.amazonaws.com --source-arn arn:aws:s3:::trusted-$NOME_BUCKET --source-account $CONTA
+
+echo "configurando trigger"
+aws s3api put-bucket-notification-configuration --bucket trusted-$NOME_BUCKET --notification-configuration "{
+  \"LambdaFunctionConfigurations\": [
+    {
+      \"LambdaFunctionArn\": \"arn:aws:lambda:us-east-1:$CONTA:function:$NOME_FUNCAO_CLIENT\",
+      \"Events\": [\"s3:ObjectCreated:*\"]
     }
   ]
 }"
